@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { ErrorTypes } from '../types/ErrorTypes';
-import { Dispatch, SetStateAction, useEffect } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 
 type Props = {
   errorMessage: ErrorTypes | null;
@@ -8,17 +8,25 @@ type Props = {
 };
 
 export const Error: React.FC<Props> = ({ errorMessage, setErrorMessage }) => {
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     if (errorMessage === null) {
       return;
     }
 
-    const timerId = setTimeout(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = setTimeout(() => {
       setErrorMessage(null);
     }, 3000);
 
     return () => {
-      clearTimeout(timerId);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
   }, [errorMessage, setErrorMessage]);
 
@@ -34,7 +42,13 @@ export const Error: React.FC<Props> = ({ errorMessage, setErrorMessage }) => {
         data-cy="HideErrorButton"
         type="button"
         className="delete"
-        onClick={() => setErrorMessage(null)}
+        onClick={() => {
+          if (timerRef.current) {
+            clearTimeout(timerRef.current);
+          }
+
+          setErrorMessage(null);
+        }}
       />
       {errorMessage}
     </div>
